@@ -1,0 +1,14 @@
+{
+  "name": "nodejs-debug-agent-demo",
+  "version": "1.0.0",
+  "description": "Demo app for Node.js Debug Agent",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "morgan": "^1.10.0",
+    "memory-cache": "^0.2.0"
+  }
+}

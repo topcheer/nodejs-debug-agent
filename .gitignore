@@ -1,0 +1,7 @@
+*.log
+*.pyc
+.DS_Store
+.env
+__pycache__/
+demo-recordings/
+node_modules/

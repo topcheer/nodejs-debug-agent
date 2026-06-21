@@ -1,0 +1,11 @@
+{
+  "name": "nodejs-debug-agent-scripts",
+  "version": "1.0.0",
+  "description": "Demo recording scripts for Node.js Debug Agent",
+  "scripts": {
+    "record": "node demo-record.js"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
