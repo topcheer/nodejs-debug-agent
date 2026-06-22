@@ -35,3 +35,8 @@ require('./config');
 require('./feature-flags');
 require('./endpoint-test');
 require('./pool');
+require('./cpu-profile');
+require('./leak-detector');
+require('./build-info');
+require('./snapshot');
+require('./service-registry');

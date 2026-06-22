@@ -1,12 +1,12 @@
 # Node.js Debug Agent
 
 [![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
-![Tools](https://img.shields.io/badge/tools-87-blue)
-![Inspectors](https://img.shields.io/badge/inspectors-34-green)
+![Tools](https://img.shields.io/badge/tools-101-blue)
+![Inspectors](https://img.shields.io/badge/inspectors-39-green)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
 ![npm](https://img.shields.io/badge/npm-latest-CB3837)
 
-An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **87 diagnostic tools across 34 inspectors**.
+An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **101 diagnostic tools across 39 inspectors**.
 
 ## Version Support
 
@@ -66,10 +66,10 @@ http://localhost:3000/agent
 - **Context compression** — automatically summarizes old conversation when token limit is approached
 - **Dark-themed chat UI** with full markdown rendering (tables, code blocks, lists)
 - **Max tool rounds** (25) with forced final summary when limit is reached
-- **87 diagnostic tools** across **34 inspectors**
+- **101 diagnostic tools** across **39 inspectors**
 - Zero external dependencies (no Datadog, no Grafana, no APM)
 
-## Inspectors & Tools (87)
+## Inspectors & Tools (101)
 
 ### Runtime Inspector
 | Tool | Description |
@@ -259,6 +259,40 @@ http://localhost:3000/agent
 | `get_pool_details` | Detailed DB pool stats (pool size, active, idle, waiting, max) |
 | `detect_pool_leaks` | Heuristic leak detection (growing pool, high wait ratio, saturation) |
 | `get_pool_wait_stats` | Connection acquire wait stats (avg, P95, max wait, timeout count) |
+
+### CPU Profiler Inspector (v0.7.0)
+| Tool | Description |
+|------|-------------|
+| `start_cpu_profile` | Start a CPU profiling session |
+| `stop_cpu_profile` | Stop CPU profiling and return collected profile data |
+| `get_top_functions` | Get top CPU-consuming functions from the current profile |
+
+### Memory Leak Detector Inspector (v0.7.0)
+| Tool | Description |
+|------|-------------|
+| `take_heap_snapshot` | Capture a V8 heap snapshot for leak analysis |
+| `compare_heap_snapshots` | Compare two heap snapshots to identify object growth |
+| `get_leak_candidates` | Identify objects likely to be memory leaks |
+
+### Deployment/Build Info Inspector (v0.7.0)
+| Tool | Description |
+|------|-------------|
+| `get_build_info` | Build version, commit hash, and package metadata |
+| `get_deployment_info` | Deployment environment, container, and orchestration metadata |
+| `get_runtime_version` | Node.js/V8 runtime version and feature flags |
+
+### Snapshot & Diff Inspector (v0.7.0)
+| Tool | Description |
+|------|-------------|
+| `take_snapshot` | Capture a runtime state snapshot |
+| `compare_snapshots` | Compare two snapshots to identify state changes |
+| `list_snapshots` | List all saved snapshots with timestamps |
+
+### Service Registry Inspector (v0.7.0)
+| Tool | Description |
+|------|-------------|
+| `get_registered_services` | List all registered application services |
+| `get_service_dependencies` | Map service-to-service dependency graph |
 
 ## Custom Tools
 
