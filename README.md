@@ -1,10 +1,10 @@
 # Node.js Debug Agent
 
 [![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
-![Tools](https://img.shields.io/badge/tools-41-blue)
-![Inspectors](https://img.shields.io/badge/inspectors-15-green)
+![Tools](https://img.shields.io/badge/tools-56-blue)
+![Inspectors](https://img.shields.io/badge/inspectors-23-green)
 
-An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **41 diagnostic tools across 15 inspectors**.
+An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **56 diagnostic tools across 23 inspectors**.
 
 ## Quick Start
 
@@ -51,10 +51,10 @@ http://localhost:3000/agent
 - **Context compression** — automatically summarizes old conversation when token limit is approached
 - **Dark-themed chat UI** with full markdown rendering (tables, code blocks, lists)
 - **Max tool rounds** (25) with forced final summary when limit is reached
-- **41 diagnostic tools** across **15 inspectors**
+- **56 diagnostic tools** across **23 inspectors**
 - Zero external dependencies (no Datadog, no Grafana, no APM)
 
-## Inspectors & Tools (41)
+## Inspectors & Tools (56)
 
 ### Runtime Inspector
 | Tool | Description |
@@ -156,6 +156,53 @@ http://localhost:3000/agent
 |------|-------------|
 | `get_cluster_workers` | List cluster workers with PID, state, and isPrimary flag |
 | `get_worker_resource_usage` | Per-worker memory and CPU usage |
+
+### Logging Inspector
+| Tool | Description |
+|------|-------------|
+| `get_log_buffer` | Recent log entries from the built-in ring buffer (console capture) |
+| `get_log_level` | Current log level for registered loggers (winston, pino, bunyan) |
+| `set_log_level` | Dynamically change the log level of a registered logger |
+| `get_log_transports` | List configured transports/handlers for registered loggers |
+
+### Cache Inspector
+| Tool | Description |
+|------|-------------|
+| `get_cache_stats` | Stats for registered caches (hit rate, miss count, key count) |
+| `get_cache_keys` | List keys from a registered cache with optional prefix filter |
+| `clear_cache` | Clear all entries from a registered cache |
+
+### Outbound HTTP Inspector
+| Tool | Description |
+|------|-------------|
+| `get_http_agents` | List http.Agent/https.Agent instances with connection pool stats |
+| `get_outbound_summary` | Summary of outbound HTTP calls (total, avg latency, error rate, top hosts) |
+
+### File Descriptor Inspector
+| Tool | Description |
+|------|-------------|
+| `get_fd_info` | Open file descriptor count and system limits (RLIMIT_NOFILE) |
+
+### Metrics Inspector
+| Tool | Description |
+|------|-------------|
+| `get_registered_metrics` | List registered Prometheus metrics from prom-client |
+| `get_metric_value` | Get the value of a specific registered Prometheus metric by name |
+
+### Sockets Inspector
+| Tool | Description |
+|------|-------------|
+| `get_socket_info` | List active net.Socket connections (remote address, bytes read/written, state) |
+
+### Streams Inspector
+| Tool | Description |
+|------|-------------|
+| `get_stream_status` | List active readable/writable/transform streams with their state |
+
+### Performance Inspector
+| Tool | Description |
+|------|-------------|
+| `get_perf_entries` | PerformanceObserver entries (GC, function, measure marks) |
 
 ## Custom Tools
 
