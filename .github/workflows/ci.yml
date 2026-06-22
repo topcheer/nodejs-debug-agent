@@ -31,7 +31,7 @@ jobs:
           node -e "
             require('./src/inspectors');
             const {registry} = require('./src/tool-registry');
-            const count = Object.keys(registry.tools).length;
+            const count = registry.tools.size;
             if(count < 20) throw new Error('Expected 20+ tools, got '+count);
             console.log('OK: '+count+' tools registered');
           "
