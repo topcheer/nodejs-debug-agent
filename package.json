@@ -10,6 +10,9 @@
     "prepublishOnly": "node -e \"require('./src/index.js')\""
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "publishConfig": {
     "access": "public"
   },
