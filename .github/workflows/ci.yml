@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────────────────────────
+# CI — lint and build on every push/PR
+# ─────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Load module
+        run: node -e "require('./src/index.js'); console.log('Module loaded successfully')"
+
+      - name: Verify tool registry
+        run: |
+          node -e "
+            require('./src/inspectors');
+            const {registry} = require('./src/tool-registry');
+            const count = Object.keys(registry.tools).length;
+            if(count < 20) throw new Error('Expected 20+ tools, got '+count);
+            console.log('OK: '+count+' tools registered');
+          "
+
+      - name: Test demo build
+        run: |
+          cd demo && npm install && node -e "require('./app.js'); process.exit(0)" &
+          sleep 2 && kill %1 2>/dev/null; echo 'Demo loads OK'

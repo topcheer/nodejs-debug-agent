@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────
+# npm-publish — Push a tag `v1.2.3` to publish to npm
+#
+# Usage:
+#   git tag v0.2.0
+#   git push origin v0.2.0
+#
+# Version is extracted from the tag. GitHub Release is auto-created.
+# Uses OIDC trusted publishing — no NPM_TOKEN needed.
+# ─────────────────────────────────────────────────────────────────
+name: npm
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Sync version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "Tag: $TAG  Version: $VERSION"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version already published
+        id: release
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          package_name="$(node -p "require('./package.json').name")"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
+          if npm view "${package_name}@${version}" --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            echo "${package_name}@${version} already exists on npm; skipping publish."
+          else
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Verify module loads
+        if: steps.release.outputs.publish == 'true'
+        run: node -e "require('./src/index.js'); console.log('Module loaded successfully')"
+
+      - name: Publish to npm
+        if: steps.release.outputs.publish == 'true'
+        run: npm publish --access public --provenance=false
+
+      - name: Create GitHub Release
+        if: steps.release.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            ### npm
+            ```
+            npm install ${{ steps.release.outputs.package_name }}@${{ steps.release.outputs.version }}
+            ```
+
+            ### Quick Start
+            ```js
+            const { DebugAgent } = require('@ggaiteam/node-debug-agent');
+            const agent = DebugAgent.middleware();
+            app.use('/agent', agent);
+            ```
