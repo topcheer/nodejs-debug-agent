@@ -3,10 +3,14 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 
 /**
- * Node.js Debug Agent — Full demo recording (27 tools / 9 inspectors)
+ * Node.js Debug Agent v0.5.0 — Full demo recording (70 tools / 19 inspectors)
  *
- * 7 sections using NATURAL LANGUAGE prompts (no explicit tool names).
+ * 10 sections using NATURAL LANGUAGE prompts (no explicit tool names).
  * The LLM must autonomously decide which tools to invoke.
+ *
+ * New v0.5.0 inspectors: Security, Health, Scheduler, Error Tracking,
+ * WebSocket, plus Redis, Express routes, ORM, queue, Logging, Cache,
+ * Outbound HTTP, Metrics.
  *
  * Usage:
  *   1. Start demo: cd demo && LLM_API_KEY=... node app.js
@@ -70,123 +74,177 @@ async function pause(page, ms = 3000) {
   await page.waitForTimeout(ms);
 }
 
-// ─── Section 1: Node.js Runtime + Memory ──────────────────────────────────
-// Tools: get_heap_stats, trigger_gc, get_heap_snapshot_stats, get_v8_flags,
-//        get_system_info, get_process_info, get_uptime
+// ─── Section 1: Runtime Memory + V8 Heap + Event Loop ──────────────────────
 
 async function section1_runtime(page) {
-  console.log('  [1/7] Node.js Runtime + Memory Deep Dive');
-  await typeMessage(page, "My app feels sluggish. Can you check the overall runtime health — heap memory usage, V8 stats, and how long the process has been running?");
+  console.log('  [1/10] Runtime Memory + V8 Heap + Event Loop');
+  await typeMessage(page, "My Node.js app feels sluggish. Can you check the overall runtime health — heap memory usage, V8 statistics, and how long the process has been running?");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "Show me detailed V8 heap statistics — the per-space breakdown like new space, old space, code space. Also show heap code statistics.");
-  await sendAndWait(page);
-  await pause(page, 4000);
-
-  await typeMessage(page, "What's the system info — CPU count, total memory, load average? And what V8 engine flags are currently set?");
+  await typeMessage(page, "Show me detailed V8 heap statistics — the per-space breakdown like new space, old space, and code space. Also show the event loop lag.");
   await sendAndWait(page);
   await pause(page, 4000);
 
   await typeMessage(page, "Try forcing a garbage collection — I want to see how much memory can be reclaimed.");
   await sendAndWait(page);
   await pause(page, 5000);
+  console.log('  → Transition: Active Handles + Process Info + FD');
 }
 
-// ─── Section 2: Process + Event Loop + Active Handles ─────────────────────
-// Tools: get_process_info, get_event_loop_lag, get_resource_usage,
-//        get_active_handles, get_active_requests, get_handle_summary
+// ─── Section 2: Active Handles + Process Info + FD ─────────────────────────
 
 async function section2_process(page) {
-  console.log('  [2/7] Process + Event Loop + Active Handles');
-  await typeMessage(page, "Show me the process info — PID, Node version, platform, CPU and memory usage. Also measure the event loop lag.");
+  console.log('  [2/10] Active Handles + Process Info + FD');
+  await typeMessage(page, "What active libuv handles are keeping the process alive? List timers, sockets, and servers — and summarize them by type.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "What active libuv handles are keeping the process alive? List timers, sockets, servers — and summarize them by type.");
+  await typeMessage(page, "Show me process info — PID, Node version, platform, CPU and memory usage. Also check how many file descriptors are open.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "Are there any pending libuv requests (active I/O operations)? Show me process resource usage details too.");
+  await typeMessage(page, "What's the CPU info — core count, model, speed, and load average for the last 1, 5, and 15 minutes?");
   await sendAndWait(page);
   await pause(page, 5000);
+  console.log('  → Transition: Express Routes + Middleware + Modules');
 }
 
-// ─── Section 3: Framework + Routes + Middleware ───────────────────────────
-// Tools: get_routes, get_middleware, get_installed_packages, get_environment_variables
+// ─── Section 3: Express Routes + Middleware + Modules ──────────────────────
 
 async function section3_framework(page) {
-  console.log('  [3/7] Framework + Routes + Middleware');
+  console.log('  [3/10] Express Routes + Middleware + Modules');
   await typeMessage(page, "What API endpoints does this Express application expose? List all the registered routes with methods and paths.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "Show me the Express middleware stack — what middleware is installed?");
+  await typeMessage(page, "Show me the Express middleware stack — what middleware layers are installed?");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "What npm packages are installed? Also show me the environment variables (with secrets masked).");
+  await typeMessage(page, "How many Node.js modules are currently loaded? Show me the module count grouped by package, and list installed npm packages.");
   await sendAndWait(page);
   await pause(page, 5000);
+  console.log('  → Transition: HTTP Requests + Database Pool + Redis');
 }
 
-// ─── Section 4: HTTP Requests + Modules ───────────────────────────────────
-// Tools: get_recent_requests, get_slow_requests, get_error_requests,
-//        get_request_stats, get_loaded_modules, get_module_count
+// ─── Section 4: HTTP Requests + Database Pool + Redis ──────────────────────
 
-async function section4_http(page) {
-  console.log('  [4/7] HTTP Requests + Modules');
+async function section4_http_db(page) {
+  console.log('  [4/10] HTTP Requests + Database Pool + Redis');
   await typeMessage(page, "What HTTP requests have come in recently? Show me request statistics — P50, P95, P99 latency and error rate.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "Show me the slowest requests and any error requests (4xx, 5xx status codes).");
+  await typeMessage(page, "Is there a database driver loaded (pg, mysql2, or mongodb)? If so, check the connection pool status — active, idle, and waiting connections.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "How many Node.js modules are currently loaded? Show me the module count grouped by package.");
+  await typeMessage(page, "Check the Redis connection pool — how many connections are active and idle? Show me any Redis slow queries.");
   await sendAndWait(page);
   await pause(page, 5000);
+  console.log('  → Transition: Logging + Cache Stats + Metrics');
 }
 
-// ─── Section 5: System + CPU + Disk ───────────────────────────────────────
-// Tools: get_cpu_info, get_disk_usage, get_uptime
+// ─── Section 5: Logging + Cache Stats + Metrics ───────────────────────────
 
-async function section5_system(page) {
-  console.log('  [5/7] System Resources');
-  await typeMessage(page, "Give me the CPU info — core count, model, speed, and load average for the last 1, 5, and 15 minutes.");
+async function section5_logging_cache(page) {
+  console.log('  [5/10] Logging + Cache Stats + Metrics');
+  await typeMessage(page, "Show me the logging configuration — what log level is set, what transport is used (console, file), and recent log entries.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "What's the disk usage for the current working directory? How much space is free?");
-  await sendAndWait(page);
-  await pause(page, 5000);
-}
-
-// ─── Section 6: Database Pool Detection ───────────────────────────────────
-// Tools: get_db_pool_status
-
-async function section6_database(page) {
-  console.log('  [6/7] Database Connection Pool');
-  await typeMessage(page, "Is there a database driver loaded (pg, mysql2, or mongodb)? If so, check the connection pool status.");
+  await typeMessage(page, "What's the cache status? Show me cache hit and miss rates, total keys, and memory usage for any in-memory caches.");
   await sendAndWait(page);
   await pause(page, 4000);
 
-  await typeMessage(page, "List all loaded modules that contain 'express' or 'morgan' in their path. Show me the cache contents.");
+  await typeMessage(page, "Show me the application metrics — request counts, error rates, latency histograms, and any custom metrics.");
   await sendAndWait(page);
   await pause(page, 5000);
+  console.log('  → Transition: Security (auth config, sessions, CORS)');
 }
 
-// ─── Section 7: Comprehensive Debugging ───────────────────────────────────
-// Cross-cutting scenario that exercises multiple inspectors together
+// ─── Section 6: Security (auth config, sessions, CORS) ─────────────────────
 
-async function section7_comprehensive(page) {
-  console.log('  [7/7] Comprehensive Debugging Scenario');
-  await typeMessage(page, "I'm debugging a performance issue. Give me a comprehensive overview: heap memory, GC status, event loop lag, active handles, recent HTTP requests with errors, and process resource usage — all in one summary.");
+async function section6_security(page) {
+  console.log('  [6/10] Security (auth config, sessions, CORS)');
+  await typeMessage(page, "I'm doing a security audit. What authentication and authorization middleware is configured? Show me the auth settings and any JWT or passport configuration.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Are there any active sessions? Show me session details — how many are active and their expiry. Also show me the CORS configuration.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Check for potential security issues — are there any environment variables exposing secrets, insecure headers, or overly permissive CORS settings?");
+  await sendAndWait(page);
+  await pause(page, 5000);
+  console.log('  → Transition: Health Checks + Scheduler');
+}
+
+// ─── Section 7: Health Checks + Scheduler ──────────────────────────────────
+
+async function section7_health_scheduler(page) {
+  console.log('  [7/10] Health Checks + Scheduler');
+  await typeMessage(page, "Run a health check on the database connection — is it reachable and responding quickly? Also check the Redis connection health.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Are there any scheduled or cron jobs running? Show me the scheduler status, registered jobs, and upcoming executions.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Give me an overall readiness summary — are all critical dependencies healthy and are there any queue or background job issues?");
+  await sendAndWait(page);
+  await pause(page, 5000);
+  console.log('  → Transition: Error Tracking + WebSocket Connections');
+}
+
+// ─── Section 8: Error Tracking + WebSocket Connections ─────────────────────
+
+async function section8_errors_websocket(page) {
+  console.log('  [8/10] Error Tracking + WebSocket Connections');
+  await typeMessage(page, "Show me recent errors tracked by the application — any uncaught exceptions, unhandled promise rejections, or error-level log entries.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Are there any WebSocket connections active? Show me connection details — how many clients are connected and any connection errors.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Show me any recently caught application errors with their stack traces. Are there recurring error patterns?");
+  await sendAndWait(page);
+  await pause(page, 5000);
+  console.log('  → Transition: Outbound HTTP + Perf Entries + Socket Info');
+}
+
+// ─── Section 9: Outbound HTTP + Perf Entries + Socket Info ─────────────────
+
+async function section9_outbound_perf(page) {
+  console.log('  [9/10] Outbound HTTP + Perf Entries + Socket Info');
+  await typeMessage(page, "What outbound HTTP requests has the application made recently? Show me external API calls with their response times and status codes.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Show me performance entries — any timing measurements from the Performance API, and Node.js native module load times.");
+  await sendAndWait(page);
+  await pause(page, 4000);
+
+  await typeMessage(page, "Show me active socket information — TCP connections, their states, and any sockets in TIME_WAIT or CLOSE_WAIT.");
+  await sendAndWait(page);
+  await pause(page, 5000);
+  console.log('  → Transition: Comprehensive Multi-Tool Debugging');
+}
+
+// ─── Section 10: Comprehensive Multi-Tool Debugging ────────────────────────
+
+async function section10_comprehensive(page) {
+  console.log('  [10/10] Comprehensive Multi-Tool Debugging');
+  await typeMessage(page, "I'm investigating a production incident. Give me a comprehensive overview: heap memory and GC status, event loop lag, active handles, recent HTTP requests with errors, database and Redis pool health, and any tracked errors — all in one summary.");
   await sendAndWait(page);
   await pause(page, 6000);
 
-  await typeMessage(page, "Now check: how many routes are registered, what's the module count, and are there any slow or error requests? Summarize the app's overall state.");
+  await typeMessage(page, "Now check: how many routes are registered, what's the module count, are there any WebSocket connections with issues, and what do the security settings look like? Summarize the app's overall state and recommendations.");
   await sendAndWait(page);
   await pause(page, 5000);
 }
@@ -196,8 +254,8 @@ async function section7_comprehensive(page) {
 (async () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║  Node.js Debug Agent — Demo Recording                        ║
-║  27 tools / 9 inspectors                                     ║
+║  Node.js Debug Agent v0.5.0 — Demo Recording                  ║
+║  70 tools / 19 inspectors                                      ║
 ╚══════════════════════════════════════════════════════════════╝
   `);
 
@@ -244,13 +302,16 @@ async function section7_comprehensive(page) {
   await pause(page, 1000);
 
   const sections = [
-    { name: '01-runtime', fn: section1_runtime },
-    { name: '02-process', fn: section2_process },
-    { name: '03-framework', fn: section3_framework },
-    { name: '04-http', fn: section4_http },
-    { name: '05-system', fn: section5_system },
-    { name: '06-database', fn: section6_database },
-    { name: '07-comprehensive', fn: section7_comprehensive },
+    { name: '01-runtime-v8-eventloop', fn: section1_runtime },
+    { name: '02-handles-process-fd', fn: section2_process },
+    { name: '03-routes-middleware-modules', fn: section3_framework },
+    { name: '04-http-db-redis', fn: section4_http_db },
+    { name: '05-logging-cache-metrics', fn: section5_logging_cache },
+    { name: '06-security', fn: section6_security },
+    { name: '07-health-scheduler', fn: section7_health_scheduler },
+    { name: '08-errors-websocket', fn: section8_errors_websocket },
+    { name: '09-outbound-perf-socket', fn: section9_outbound_perf },
+    { name: '10-comprehensive', fn: section10_comprehensive },
   ];
 
   const startTime = Date.now();

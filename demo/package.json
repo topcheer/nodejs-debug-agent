@@ -12,6 +12,8 @@
     "memory-cache": "^0.2.0",
     "ioredis": "^5.4.1",
     "better-sqlite3": "^11.3.0",
-    "bullmq": "^5.13.0"
+    "bullmq": "^5.13.0",
+    "ws": "^8.18.0",
+    "express-session": "^1.18.0"
   }
 }

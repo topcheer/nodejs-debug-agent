@@ -2,79 +2,62 @@
 
 ## Title
 
-Node.js Debug Agent — AI-Powered In-Process Diagnostics (41 Tools / 15 Inspectors)
+Node.js Debug Agent v0.5.0 — Security, Health, Scheduler, Error Tracking, WebSocket (70 Tools)
 
 ## Description
 
-Chat with your LIVE Node.js application at runtime. The Node.js Debug Agent embeds directly into your app and gives an AI assistant access to 41 diagnostic tools across 15 inspectors — V8 heap, event loop, active handles, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more.
+Chat with your LIVE Node.js application at runtime. The Node.js Debug Agent embeds directly into your app and gives an AI assistant access to 70 diagnostic tools across 28 inspectors — V8 heap, event loop, active handles, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, security and auth, health checks, scheduled jobs, error tracking, WebSocket connections, and more.
 
-No external agents. No attach-to-process. No separate monitoring stack. Just one npm install, one line of code, and you're chatting with your running app.
+No external agents. No attach-to-process. No separate monitoring stack. Just one npm install, one line of code, and you are chatting with your running app.
 
-### What you'll see in this demo
+Version 0.5.0 adds five new inspectors: Security, Health, Scheduler, Error Tracking, and WebSocket — bringing the total from 56 to 70 tools.
 
-**Section 1 — Node.js Runtime Deep Dive**
-Memory usage (RSS, heap, external), CPU time, event loop lag, and process uptime — all through natural language.
+### What is new in v0.5.0
 
-**Section 2 — V8 Heap + Active Handles**
-Heap statistics, per-space breakdown, code stats, active libuv handles and requests with type summary.
+**Security Inspector (3 tools)**
+Inspect auth configurations — passport strategies, JWT settings, session middleware, CORS. List active sessions from express-session stores with session IDs, users, and expiry. View registered API keys with masked values for safe debugging.
 
-**Section 3 — HTTP Requests + Express Routes**
-Discovering all Express routes and middleware, analyzing recent HTTP traffic, identifying slow and error requests.
+**Health Inspector (3 tools)**
+Run all registered health checks and get aggregate UP/DOWN status per component. Drill into individual checks for detailed diagnostics. Register custom health checks at runtime for databases, caches, APIs, memory thresholds.
 
-**Section 4 — Database + Redis**
-Inspecting database connection pool stats, Redis server info, keyspace scan, and slow log.
+**Scheduler Inspector (2 tools)**
+List registered cron jobs and scheduled tasks from node-cron, node-schedule, or custom timers. View execution history per job with timestamps, status, duration, and errors.
 
-**Section 5 — Mongoose + BullMQ**
-Listing Mongoose models with schema definitions, BullMQ queue depth and job inspection.
+**Error Tracking Inspector (3 tools)**
+Capture uncaught exceptions and unhandled rejections automatically via process listeners. View recent errors with stack traces and context. Get error statistics — total count, rate per minute, top error types. Identify recurring patterns grouped by normalized signatures.
 
-**Section 6 — Cluster Workers + System**
-Enumerating cluster workers with PID and state, per-worker resource usage, system info and disk.
+**WebSocket Inspector (3 tools)**
+List active WebSocket connections from the ws library or Socket.IO with remote address, uptime, and message counts. Get aggregate stats — total connections, active now, messages sent and received. Inspect Socket.IO rooms with member counts.
 
-**Section 7 — Comprehensive Debugging**
-Multi-tool correlation: memory + heap + event loop + Redis + BullMQ + routes + requests — all in one analysis.
+### Demo Walkthrough
+
+Section 1 — Runtime: Memory, CPU, event loop lag, uptime
+Section 2 — V8 Heap and Active Handles
+Section 3 — HTTP Requests and Express Routes
+Section 4 — Database, Redis, and Caching
+Section 5 — Mongoose, BullMQ, and Queues
+Section 6 — Security: Auth configs, sessions, masked API keys (NEW)
+Section 7 — Health Checks: Database, Redis, memory (NEW)
+Section 8 — Scheduler: Cron jobs and execution history (NEW)
+Section 9 — Error Tracking: Capture, stats, patterns via /api/panic (NEW)
+Section 10 — WebSocket: Echo server connections and stats (NEW)
+Section 11 — Comprehensive Multi-Tool Debugging
 
 ### Quick Start
 
 ```javascript
 const express = require('express');
 const { DebugAgent } = require('@ggaiteam/node-debug-agent');
-
 const app = express();
 app.use('/agent', DebugAgent.middleware());
 app.listen(3000);
 ```
 
-Open `http://localhost:3000/agent` and start chatting with your app.
+Open http://localhost:3000/agent and start chatting with your app.
 
-### Features
+### Inspector Coverage — 70 tools, 28 inspectors
 
-- 41 diagnostic tools across 15 inspectors
-- Streaming AI responses with real-time tool call badges
-- LLM-based context compression for long conversations
-- Custom tool registration via DebugAgent.registerTool()
-- Works with any OpenAI-compatible LLM endpoint
-- Zero external dependencies (no Datadog, no Grafana, no APM)
-- Dark-themed chat UI built-in (single HTML page, no frontend framework)
-
-### Inspector Coverage
-
-| Inspector | Tools | What it inspects |
-|-----------|-------|-----------------|
-| Runtime | 4 | Memory, CPU, uptime, event loop lag |
-| V8 Heap | 3 | Heap stats, space stats, code stats |
-| Active Handles | 3 | libuv handles, requests, summary |
-| Process | 3 | Process info, resource usage, env vars |
-| Modules | 2 | Loaded modules, count |
-| Database | 2 | Pool status, query stats |
-| Framework | 3 | Routes, middleware, app config |
-| HTTP Tracker | 4 | Requests, slow, errors, stats |
-| System | 3 | System info, disk, OS uptime |
-| Redis | 4 | Server info, keys, slowlog, client stats |
-| Express Routes | 2 | Express routes, middleware stack |
-| Fastify | 2 | Routes, plugins/decorators |
-| Mongoose | 2 | Models with schemas, indexes |
-| BullMQ | 2 | Queues with job counts, job inspection |
-| Cluster | 2 | Workers, per-worker resource usage |
+Runtime(4) V8Heap(3) ActiveHandles(3) Process(3) Modules(2) Database(1) Framework(3) HTTPTracker(4) System(3) Redis(4) Express(2) Fastify(2) Mongoose(2) BullMQ(2) Cluster(2) Logging(4) Cache(3) HTTPClient(2) FD(1) Metrics(2) Perf(2) Sockets(1) Streams(1) Security(3) Health(3) Scheduler(2) ErrorTracking(3) WebSocket(3)
 
 ### GitHub
 
@@ -82,39 +65,39 @@ github.com/topcheer/nodejs-debug-agent
 
 ### Tags
 
-#nodejs #nodejsdebugging #AI #Diagnostics #Express #Fastify #Redis #Mongoose #BullMQ #V8 #EventLoop #LLM #GLM #DeveloperTools #DevOps #ApplicationMonitoring #JavaScript #AIOps #Observability
+#nodejs #security #healthcheck #websocket #errorhandling #cron #express
 
 ## Chapters
 
 00:00 Introduction
-00:11 Node.js Runtime — Memory, CPU, Event Loop
-00:41 V8 Heap + Active Handles
-01:11 HTTP Requests + Express Routes
-01:41 Database + Redis
-02:12 Mongoose + BullMQ
-02:42 Cluster Workers + System
-03:12 Comprehensive Multi-Tool Debugging
+00:06 Runtime Memory + V8 Heap + Event Loop
+00:39 Active Handles + Process + FD
+01:12 Express Routes + Middleware
+01:45 HTTP Requests + Database + Redis
+02:18 Logging + Cache + Metrics
+02:51 Security — Auth, Sessions, CORS
+03:24 Health Checks + Scheduler
+03:57 Error Tracking + WebSocket
+04:30 Outbound HTTP + Perf + Sockets
+05:03 Comprehensive Multi-Tool Debugging
 
 ---
 
-## Thumbnail Text (for image)
+## Thumbnail Text
 
-Node.js Debug Agent
+Node.js Debug Agent v0.5.0
 Chat with your LIVE app
-41 tools / 15 inspectors
+70 tools / 28 inspectors
 
 ---
 
 ## Playlist
 
 AI Debug Agents Collection
-(Spring / .NET / Go / Node.js / Python / Ruby)
-
----
 
 ## Category
 
-Science & Technology
+Science and Technology
 
 ## Language
 

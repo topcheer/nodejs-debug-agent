@@ -24,3 +24,8 @@ require('./metrics');
 require('./perf');
 require('./sockets');
 require('./streams');
+require('./security');
+require('./health');
+require('./scheduler');
+require('./error-tracking');
+require('./websocket');
