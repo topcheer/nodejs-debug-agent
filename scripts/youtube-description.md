@@ -78,7 +78,7 @@ Open `http://localhost:3000/agent` and start chatting with your app.
 
 ### GitHub
 
-https://github.com/topcheer/nodejs-debug-agent
+github.com/topcheer/nodejs-debug-agent
 
 ### Tags
 
