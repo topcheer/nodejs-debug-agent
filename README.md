@@ -1,35 +1,39 @@
 # Node.js Debug Agent
 
-An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, routes, HTTP requests, and more.
+An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, HTTP requests, and more.
 
 ## Quick Start
 
 ### 1. Install
 
 ```bash
-npm install @debug-agent/node
+npm install @ggaiteam/node-debug-agent
 ```
 
 ### 2. Integrate (Express)
 
 ```javascript
 const express = require('express');
-const { createExpressRouter } = require('@debug-agent/node');
+const { DebugAgent } = require('@ggaiteam/node-debug-agent');
 
 const app = express();
 app.use(express.json());
 
 // One line to integrate
-app.use(createExpressRouter());
+app.use('/agent', DebugAgent.middleware());
+
+app.listen(3000);
 ```
 
 ### 3. Configure LLM
 
 ```bash
 export LLM_API_KEY=your-key
-export LLM_BASE_URL=https://api.openai.com/v1  # optional
-export LLM_MODEL=gpt-4o                         # optional
+export LLM_BASE_URL=https://open.bigmodel.cn/api/coding/paas/v4  # default
+export LLM_MODEL=glm-5.2                                          # default
 ```
+
+Supports any OpenAI-compatible endpoint.
 
 ### 4. Run and open
 
@@ -37,79 +41,108 @@ export LLM_MODEL=gpt-4o                         # optional
 http://localhost:3000/agent
 ```
 
-## Framework Integrations
+## Features
 
-### Express
+- **Streaming AI responses** with real-time tool call badges (pending / success / error)
+- **Context compression** — automatically summarizes old conversation when token limit is approached
+- **Dark-themed chat UI** with full markdown rendering (tables, code blocks, lists)
+- **Max tool rounds** (25) with forced final summary when limit is reached
+- **27 diagnostic tools** across 9 inspectors
 
-```javascript
-const { createExpressRouter } = require('@debug-agent/node');
-app.use(createExpressRouter());
-```
+## Inspectors & Tools (27)
 
-### Fastify
-
-```javascript
-const fastify = require('fastify')();
-const { createFastifyPlugin } = require('@debug-agent/node');
-fastify.register(createFastifyPlugin());
-```
-
-### Raw HTTP Server
-
-```javascript
-const http = require('http');
-const { createHttpHandler } = require('@debug-agent/node');
-const handler = createHttpHandler();
-http.createServer((req, res) => {
-  if (!handler(req, res)) {
-    // your normal routing
-  }
-}).listen(3000);
-```
-
-## Built-in Tools (18+)
-
+### Runtime Inspector
 | Tool | Description |
 |------|-------------|
-| `get_heap_stats` | V8 heap statistics |
-| `trigger_gc` | Force GC with before/after comparison |
-| `get_event_loop_lag` | Event loop delay measurement |
-| `get_process_info` | PID, uptime, memory, CPU usage |
-| `get_system_info` | Hostname, CPUs, load average |
-| `get_active_handles` | Active handles keeping process alive |
-| `get_v8_flags` | V8 engine flags and Harmony features |
-| `get_routes` | Express route listing |
-| `get_middleware` | Express middleware stack |
-| `get_installed_packages` | npm packages from node_modules |
-| `get_environment_variables` | Environment variables (masked secrets) |
-| `get_recent_requests` | HTTP request ring buffer |
+| `get_memory_usage` | process.memoryUsage() — RSS, heap, external |
+| `get_cpu_usage` | process.cpuUsage() — user and system time |
+| `get_uptime` | Process uptime and Node.js version |
+| `get_event_loop_lag` | Event loop lag via perf_hooks |
+
+### V8 Heap Inspector
+| Tool | Description |
+|------|-------------|
+| `get_heap_stats` | v8.getHeapStatistics() — total/used/available heap |
+| `get_heap_space_stats` | v8.getHeapSpaceStatistics() — per-space breakdown |
+| `get_heap_code_stats` | v8.getHeapCodeStatistics() — code and bytecode stats |
+
+### Active Handles Inspector
+| Tool | Description |
+|------|-------------|
+| `get_active_handles` | List active libuv handles (timers, sockets, servers) |
+| `get_active_requests` | List active libuv requests |
+| `get_handle_summary` | Count handles by type |
+
+### Process Inspector
+| Tool | Description |
+|------|-------------|
+| `get_process_info` | PID, platform, arch, Node version, uptime |
+| `get_resource_usage` | process.resourceUsage() details |
+| `get_env_variables` | Environment variables (masked secrets) |
+
+### Modules Inspector
+| Tool | Description |
+|------|-------------|
+| `get_loaded_modules` | List loaded modules from require.cache |
+| `get_module_count` | Total loaded module count |
+
+### Database Inspector
+| Tool | Description |
+|------|-------------|
+| `get_db_pool_status` | Connection pool stats (pg, mysql2, mongodb) |
+
+### Framework Inspector
+| Tool | Description |
+|------|-------------|
+| `get_routes` | List Express/Fastify routes |
+| `get_middleware` | List middleware stack |
+| `get_app_config` | Application configuration |
+
+### HTTP Tracker Inspector
+| Tool | Description |
+|------|-------------|
+| `get_recent_requests` | Recent HTTP requests ring buffer |
 | `get_slow_requests` | Slowest requests by duration |
 | `get_error_requests` | Error requests (4xx/5xx) |
 | `get_request_stats` | P50/P95/P99 latency, error rate |
-| `get_cpu_info` | CPU cores, model, load average |
+
+### System Inspector
+| Tool | Description |
+|------|-------------|
+| `get_system_info` | Hostname, load average, CPU cores |
 | `get_disk_usage` | Disk usage for working directory |
-| `get_uptime` | Process and system uptime |
-| `get_module_list` | Loaded Node.js modules |
 
 ## Custom Tools
 
 ```javascript
-const { debugTool } = require('@debug-agent/node');
+const { DebugAgent } = require('@ggaiteam/node-debug-agent');
 
-debugTool('check_redis', 'Check Redis connection stats', {
-  host: { type: 'string', description: 'Redis host', required: false },
-})(async function checkRedis({ host }) {
-  return { connected: true, host: host || 'localhost' };
+DebugAgent.registerTool('check_redis', 'Check Redis connection', async () => {
+    return { connected: true };
 });
 ```
+
+## Configuration
+
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `LLM_BASE_URL` | `https://open.bigmodel.cn/api/coding/paas/v4` | LLM endpoint |
+| `LLM_API_KEY` | (required) | API key |
+| `LLM_MODEL` | `glm-5.2` | Model name |
+| `LLM_MAX_TOOL_ROUNDS` | `25` | Max tool-calling rounds |
+| `LLM_CONTEXT_WINDOW_TOKENS` | `100000` | Context window size |
 
 ## Run the Demo
 
 ```bash
-npm install express
-LLM_API_KEY=your-key node demo/app.js
+export LLM_API_KEY=your-key
+cd demo && npm install && node app.js
 # Open http://localhost:3000/agent
 ```
+
+## npm
+
+[![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
 
 ## License
 
