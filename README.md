@@ -1,10 +1,25 @@
 # Node.js Debug Agent
 
 [![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
-![Tools](https://img.shields.io/badge/tools-56-blue)
-![Inspectors](https://img.shields.io/badge/inspectors-23-green)
+![Tools](https://img.shields.io/badge/tools-70-blue)
+![Inspectors](https://img.shields.io/badge/inspectors-28-green)
+![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
+![npm](https://img.shields.io/badge/npm-latest-CB3837)
 
 An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **56 diagnostic tools across 23 inspectors**.
+
+## Version Support
+
+| Node.js Version | Status |
+|-----------------|--------|
+| 16.x            | Not supported |
+| 18.x (LTS)      | Minimum supported (built-in `fetch`) |
+| 20.x (LTS)      | Supported |
+| 22.x (LTS)      | Supported |
+| 24.x            | Supported |
+| 26.x            | Tested |
+
+> Requires Node.js 18+ for built-in `fetch()`, optional chaining (`?.`), and nullish coalescing (`??`).
 
 ## Quick Start
 
