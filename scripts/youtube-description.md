@@ -87,14 +87,13 @@ github.com/topcheer/nodejs-debug-agent
 ## Chapters
 
 00:00 Introduction
-01:15 Node.js Runtime — Memory, CPU, Event Loop
-03:20 V8 Heap + Active Handles
-05:30 HTTP Requests + Express Routes
-07:10 Database + Redis
-09:15 Mongoose + BullMQ
-10:50 Cluster Workers + System
-12:20 Comprehensive Multi-Tool Debugging
-14:00 Summary + Quick Start Guide
+00:11 Node.js Runtime — Memory, CPU, Event Loop
+00:41 V8 Heap + Active Handles
+01:11 HTTP Requests + Express Routes
+01:41 Database + Redis
+02:12 Mongoose + BullMQ
+02:42 Cluster Workers + System
+03:12 Comprehensive Multi-Tool Debugging
 
 ---
 
