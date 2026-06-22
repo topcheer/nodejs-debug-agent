@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Node.js Debug Agent — Enhanced Demo Application (v0.5.0)
+ * Node.js Debug Agent — Enhanced Demo Application (v0.6.0)
  *
  * Features:
  *   • Express web server with CRUD for /api/orders
@@ -14,6 +14,12 @@
  *   • Scheduled job: clean expired sessions every 30s (scheduler inspector)
  *   • Error capture middleware + /api/panic endpoint (error-tracking inspector)
  *   • WebSocket echo server at /ws (websocket inspector)
+ *   • Config snapshot with sensitive key masking (config inspector)
+ *   • Feature flags: new_ui, experimental_cache, ai_search (feature-flags inspector)
+ *   • Migration tracking with version table (migrations inspector)
+ *   • Endpoint self-testing via fetch (endpoint-test inspector)
+ *   • Connection pool registration (pool inspector)
+ *   • Event loop blocking + lock contention (locks inspector)
  *   • Registers all components with debug agent inspectors
  */
 
@@ -31,6 +37,12 @@ const { registerHealthCheck } = require('../src/inspectors/health');
 const { registerScheduledJob, recordJobExecution } = require('../src/inspectors/scheduler');
 const { captureError, errorTrackingMiddleware } = require('../src/inspectors/error-tracking');
 const { registerWSServer } = require('../src/inspectors/websocket');
+const { registerConfig, setConfigSources } = require('../src/inspectors/config');
+const { registerFeatureFlag } = require('../src/inspectors/feature-flags');
+const { registerMigrationProvider } = require('../src/inspectors/migrations');
+const { registerLock } = require('../src/inspectors/locks');
+const { setBaseUrl } = require('../src/inspectors/endpoint-test');
+const { registerPool } = require('../src/inspectors/pool');
 
 // ── Optional dependencies (loaded with graceful fallback) ──────────
 let Redis = null;
@@ -594,14 +606,204 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── Config Registration (config inspector) ───────────────────────
+const appConfig = {
+  port: process.env.PORT || 3000,
+  node_env: process.env.NODE_ENV || 'development',
+  redis_url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
+  redis_host: REDIS_HOST,
+  redis_port: REDIS_PORT,
+  database_url: 'sqlite::memory:',
+  api_keys: Object.keys(VALID_API_KEYS),
+  session_secret: 'demo-secret-key',
+  log_level: process.env.LOG_LEVEL || 'info',
+  max_connections: 10,
+  jwt_secret: 'super-secret-jwt-key',
+  stripe_api_key: 'sk_live_demo_stripe_key_12345',
+  environment: process.env.NODE_ENV || 'development',
+};
+registerConfig('app', appConfig, {
+  port: 'env',
+  node_env: 'env',
+  redis_host: 'env',
+  redis_port: 'env',
+  database_url: 'default',
+  api_keys: 'default',
+  session_secret: 'default',
+  log_level: 'env',
+  max_connections: 'default',
+  environment: 'env',
+});
+console.log('  [config] Registered app config (sensitive keys will be masked)');
+
+// ── Feature Flags Registration (feature-flags inspector) ──────────
+registerFeatureFlag('new_ui', {
+  enabled: true,
+  variant: 'v2',
+  reason: 'Rolling out to all users (100%)',
+  evaluator: (ctx) => {
+    if (ctx.userId && ctx.userId % 10 === 0) {
+      return { enabled: false, variant: null, reason: 'user excluded' };
+    }
+    return { enabled: true, variant: 'v2', reason: 'full rollout' };
+  },
+});
+registerFeatureFlag('experimental_cache', {
+  enabled: false,
+  variant: null,
+  reason: 'Disabled — under testing',
+  evaluator: (ctx) => {
+    if (ctx.attributes?.beta_tester) {
+      return { enabled: true, variant: 'redis-cache', reason: 'beta tester' };
+    }
+    return { enabled: false, variant: null, reason: 'not in beta' };
+  },
+});
+registerFeatureFlag('ai_search', {
+  enabled: true,
+  variant: 'semantic',
+  reason: 'Enabled for 50% rollout',
+  evaluator: (ctx) => {
+    if (ctx.userId && ctx.userId % 2 === 0) {
+      return { enabled: true, variant: 'semantic', reason: 'in rollout cohort' };
+    }
+    return { enabled: false, variant: null, reason: 'not in cohort' };
+  },
+});
+console.log('  [feature-flags] Registered 3 flags: new_ui, experimental_cache, ai_search');
+
+// ── Migration Tracking (migrations inspector) ─────────────────────
+// Simple knex-like migration tracker backed by SQLite
+const migrationVersions = [
+  '001_create_orders_table',
+  '002_add_updated_at_column',
+  '003_create_sessions_table',
+];
+
+registerMigrationProvider('sqlite', {
+  current: () => {
+    if (!db) return 'none';
+    try {
+      const row = db.prepare('SELECT MAX(name) as current FROM _schema_migrations').get();
+      return row?.current || 'none';
+    } catch {
+      return 'none (table not created)';
+    }
+  },
+  pending: () => {
+    let applied = [];
+    try {
+      const rows = db.prepare('SELECT name FROM _schema_migrations').all();
+      applied = rows.map(r => r.name);
+    } catch {}
+    return migrationVersions.filter(m => !applied.includes(m));
+  },
+  history: () => {
+    try {
+      return db.prepare('SELECT * FROM _schema_migrations ORDER BY name ASC').all();
+    } catch {
+      return migrationVersions.map((m, i) => ({ name: m, applied_at: new Date(Date.now() - (migrationVersions.length - i) * 86400000).toISOString() }));
+    }
+  },
+});
+
+// Create the schema migrations table and populate it
+if (db) {
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _schema_migrations (
+        name TEXT PRIMARY KEY,
+        applied_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+    // Mark first 2 migrations as applied, leave 3rd pending
+    const check = db.prepare('SELECT COUNT(*) as cnt FROM _schema_migrations').get();
+    if (check.cnt === 0) {
+      const insert = db.prepare('INSERT OR IGNORE INTO _schema_migrations (name) VALUES (?)');
+      insert.run('001_create_orders_table');
+      insert.run('002_add_updated_at_column');
+    }
+  } catch (e) {
+    console.log(`  [migrations] Failed to create schema_migrations: ${e.message}`);
+  }
+}
+console.log('  [migrations] Registered sqlite migration provider (2 applied, 1 pending)');
+
+// ── Pool Registration (pool inspector) ────────────────────────────
+// Register SQLite database as a "pool" (single connection in-memory)
+if (db) {
+  registerPool('sqlite', {
+    type: 'sqlite',
+    size: 1,
+    available: 1,
+    borrowed: 0,
+    pending: 0,
+    max: 1,
+    min: 1,
+    acquire: async () => db,
+    release: () => {},
+    connect: async () => db,
+  });
+}
+
+// Register Redis as a pool-like object
+if (redis) {
+  registerPool('redis', {
+    type: 'redis',
+    size: redis.options?.maxConnections || 1,
+    available: redis.status === 'ready' ? 1 : 0,
+    borrowed: 0,
+    pending: 0,
+    max: redis.options?.maxConnections || 1,
+    min: 1,
+    acquire: async () => redis,
+    release: () => {},
+    connect: async () => redis,
+  });
+}
+console.log(`  [pool] Registered ${db ? 'sqlite' : ''}${db && redis ? ', ' : ''}${redis ? 'redis' : ''} connection pools`);
+
+// ── Lock Registration (locks inspector) ───────────────────────────
+// Simple async mutex for demo
+const orderLock = {
+  _locked: false,
+  _waiters: [],
+  acquire() {
+    return new Promise(resolve => {
+      if (!this._locked) {
+        this._locked = true;
+        resolve(() => this.release());
+      } else {
+        this._waiters.push(resolve);
+      }
+    });
+  },
+  release() {
+    const next = this._waiters.shift();
+    if (next) {
+      next(() => this.release());
+    } else {
+      this._locked = false;
+    }
+  },
+  isLocked() { return this._locked; },
+  acquiredCount: 0,
+  waitingCount: 0,
+};
+registerLock('order-mutex', orderLock);
+console.log('  [locks] Registered order-mutex lock for contention tracking');
+
+// ── Endpoint Test Base URL (endpoint-test inspector) ─────────────
+
 // ── Start server ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
+setBaseUrl(`http://localhost:${PORT}`);
 
 httpServer.listen(PORT, () => {
   seedOrders();
   console.log(`
   ╔══════════════════════════════════════════════╗
-  ║   Node.js Debug Agent — Enhanced Demo v0.5.0 ║
+  ║   Node.js Debug Agent — Enhanced Demo v0.6.0 ║
   ║   Order Management API                       ║
   ╠══════════════════════════════════════════════╣
   ║   Chat UI:  http://localhost:${PORT}/agent          ║

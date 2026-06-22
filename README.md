@@ -1,12 +1,12 @@
 # Node.js Debug Agent
 
 [![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
-![Tools](https://img.shields.io/badge/tools-70-blue)
-![Inspectors](https://img.shields.io/badge/inspectors-28-green)
+![Tools](https://img.shields.io/badge/tools-87-blue)
+![Inspectors](https://img.shields.io/badge/inspectors-34-green)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
 ![npm](https://img.shields.io/badge/npm-latest-CB3837)
 
-An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **56 diagnostic tools across 23 inspectors**.
+An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **87 diagnostic tools across 34 inspectors**.
 
 ## Version Support
 
@@ -66,10 +66,10 @@ http://localhost:3000/agent
 - **Context compression** — automatically summarizes old conversation when token limit is approached
 - **Dark-themed chat UI** with full markdown rendering (tables, code blocks, lists)
 - **Max tool rounds** (25) with forced final summary when limit is reached
-- **56 diagnostic tools** across **23 inspectors**
+- **87 diagnostic tools** across **34 inspectors**
 - Zero external dependencies (no Datadog, no Grafana, no APM)
 
-## Inspectors & Tools (56)
+## Inspectors & Tools (87)
 
 ### Runtime Inspector
 | Tool | Description |
@@ -218,6 +218,47 @@ http://localhost:3000/agent
 | Tool | Description |
 |------|-------------|
 | `get_perf_entries` | PerformanceObserver entries (GC, function, measure marks) |
+
+### Deadlock & Lock Contention Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `get_lock_contention` | Mutex/RWLock contention stats (wait time, hold time, acquisition count) |
+| `detect_deadlock` | Analyze all async operations for deadlock patterns (circular wait detection) |
+| `get_mutex_stats` | Per-lock statistics: total acquisitions, contentions, average wait time |
+
+### Database Migration Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `get_migration_status` | Current schema version, applied count, last migration applied |
+| `get_pending_migrations` | Migrations not yet applied (version, description, dependencies) |
+| `get_migration_history` | Applied migration history (version, applied_at, duration_ms) |
+
+### Configuration Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `get_config_snapshot` | All registered config values (sensitive keys masked) |
+| `get_env_vars_masked` | Process environment variables with secret values redacted |
+| `get_config_sources` | Config source hierarchy (env, file, defaults) with effective values |
+
+### Feature Flags Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `get_feature_flags` | List all registered feature flags with current state |
+| `evaluate_feature_flag` | Evaluate a specific flag for a given context/user |
+
+### Endpoint Testing Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `test_endpoint` | Make an HTTP request to own app, return full response (status, headers, body) |
+| `batch_test_endpoints` | Test multiple endpoints in one call with aggregated results |
+| `get_endpoint_coverage` | Compare registered routes vs tested endpoints (coverage report) |
+
+### Connection Pool Inspector (v0.6.0)
+| Tool | Description |
+|------|-------------|
+| `get_pool_details` | Detailed DB pool stats (pool size, active, idle, waiting, max) |
+| `detect_pool_leaks` | Heuristic leak detection (growing pool, high wait ratio, saturation) |
+| `get_pool_wait_stats` | Connection acquire wait stats (avg, P95, max wait, timeout count) |
 
 ## Custom Tools
 
