@@ -1,6 +1,10 @@
 # Node.js Debug Agent
 
-An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, HTTP requests, and more.
+[![@ggaiteam/node-debug-agent](https://img.shields.io/npm/v/@ggaiteam/node-debug-agent.svg)](https://www.npmjs.com/package/@ggaiteam/node-debug-agent)
+![Tools](https://img.shields.io/badge/tools-41-blue)
+![Inspectors](https://img.shields.io/badge/inspectors-15-green)
+
+An AI-powered runtime debugging agent that embeds directly into your Node.js application. Add one dependency, configure an LLM key, and chat with your live app at `/agent` to inspect heap, event loop, active handles, loaded modules, process info, database pools, Redis, Express/Fastify routes, Mongoose models, BullMQ queues, cluster workers, HTTP requests, and more — **41 diagnostic tools across 15 inspectors**.
 
 ## Quick Start
 
@@ -47,9 +51,10 @@ http://localhost:3000/agent
 - **Context compression** — automatically summarizes old conversation when token limit is approached
 - **Dark-themed chat UI** with full markdown rendering (tables, code blocks, lists)
 - **Max tool rounds** (25) with forced final summary when limit is reached
-- **27 diagnostic tools** across 9 inspectors
+- **41 diagnostic tools** across **15 inspectors**
+- Zero external dependencies (no Datadog, no Grafana, no APM)
 
-## Inspectors & Tools (27)
+## Inspectors & Tools (41)
 
 ### Runtime Inspector
 | Tool | Description |
@@ -90,6 +95,7 @@ http://localhost:3000/agent
 | Tool | Description |
 |------|-------------|
 | `get_db_pool_status` | Connection pool stats (pg, mysql2, mongodb) |
+| `get_db_query_stats` | Query count, avg duration, slow query detection |
 
 ### Framework Inspector
 | Tool | Description |
@@ -111,6 +117,45 @@ http://localhost:3000/agent
 |------|-------------|
 | `get_system_info` | Hostname, load average, CPU cores |
 | `get_disk_usage` | Disk usage for working directory |
+| `get_os_uptime` | OS uptime, free memory, load averages |
+
+### Redis Inspector
+| Tool | Description |
+|------|-------------|
+| `get_redis_info` | Redis server info: memory, connected clients, role |
+| `get_redis_keys` | Scan Redis keyspace with pattern and count |
+| `get_redis_slowlog` | Redis slow query log entries |
+| `get_redis_client_stats` | Per-client connection stats and command stats |
+
+### Express Routes Inspector
+| Tool | Description |
+|------|-------------|
+| `get_express_routes` | List all Express routes with methods, paths, and params |
+| `get_express_middleware` | List Express middleware stack with mount paths |
+
+### Fastify Inspector
+| Tool | Description |
+|------|-------------|
+| `get_fastify_routes` | List Fastify routes with constraints and schemas |
+| `get_fastify_plugins` | List registered Fastify plugins and decorators |
+
+### Mongoose Inspector
+| Tool | Description |
+|------|-------------|
+| `get_mongoose_models` | List Mongoose models with schema field definitions |
+| `get_mongoose_indexes` | List indexes and connection state per model |
+
+### BullMQ Inspector
+| Tool | Description |
+|------|-------------|
+| `get_bullmq_queues` | List BullMQ queues with job counts (active, waiting, completed) |
+| `get_bullmq_jobs` | Inspect jobs in a queue with status filter and payload |
+
+### Cluster Inspector
+| Tool | Description |
+|------|-------------|
+| `get_cluster_workers` | List cluster workers with PID, state, and isPrimary flag |
+| `get_worker_resource_usage` | Per-worker memory and CPU usage |
 
 ## Custom Tools
 
@@ -133,6 +178,26 @@ DebugAgent.registerTool('check_redis', 'Check Redis connection', async () => {
 | `LLM_CONTEXT_WINDOW_TOKENS` | `100000` | Context window size |
 
 ## Run the Demo
+
+The demo uses **Express** + **ioredis** + **better-sqlite3** + **BullMQ**. Start Redis with Docker Compose first:
+
+### Docker Compose
+
+```yaml
+# docker-compose.yml
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+```
+
+```bash
+docker compose up -d
+```
+
+### Start the app
 
 ```bash
 export LLM_API_KEY=your-key

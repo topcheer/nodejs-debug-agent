@@ -9,6 +9,9 @@
   "dependencies": {
     "express": "^5.1.0",
     "morgan": "^1.10.0",
-    "memory-cache": "^0.2.0"
+    "memory-cache": "^0.2.0",
+    "ioredis": "^5.4.1",
+    "better-sqlite3": "^11.3.0",
+    "bullmq": "^5.13.0"
   }
 }
