@@ -176,4 +176,43 @@ export class DebugEngine {
 export function createExpressRouter(config?: AgentConfigOptions): any;
 export function createFastifyPlugin(config?: AgentConfigOptions): any;
 export function createHttpHandler(config?: AgentConfigOptions): (req: any, res: any) => Promise<boolean>;
+export function createKoaMiddleware(config?: AgentConfigOptions): any;
 export function getEngine(config?: AgentConfigOptions): DebugEngine;
+
+// ==================== Inspector Registration APIs ====================
+
+// Error Tracking
+export function captureError(error: Error | string, context?: { path?: string; method?: string }): void;
+
+// Config
+export function registerConfig(name: string, config: Record<string, any>): void;
+export function setConfigSources(sources: Record<string, { source: string; value: any }>): void;
+
+// Feature Flags
+export function registerFeatureFlag(name: string, flag: { enabled: boolean; variant?: string; reason?: string }): void;
+
+// Database
+export function registerDatabase(name: string, db: any): void;
+
+// Cache
+export function registerCache(name: string, cache: any): void;
+
+// Redis
+export function registerRedisClient(name: string, client: any): void;
+
+// WebSocket
+export function registerWSServer(name: string, wss: any): void;
+export function registerIO(name: string, io: any): void;
+
+// Pool
+export function registerPool(name: string, pool: any): void;
+
+// Migrations
+export function registerMigrationProvider(name: string, provider: { current: string | number; pending: string[]; history: Array<{ version: string; applied_at: string }> }): void;
+
+// Locks
+export function registerLock(name: string, lock: any): void;
+
+// Endpoint Testing
+export function getBaseUrl(): string;
+export function setBaseUrl(url: string): void;

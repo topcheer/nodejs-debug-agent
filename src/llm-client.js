@@ -15,6 +15,10 @@
 
 const https = require('https');
 const http = require('http');
+
+// Reusable agents with keepAlive for connection reuse (avoids TCP handshake per request)
+const _httpAgent = new http.Agent({ keepAlive: true, maxSockets: 4 });
+const _httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 4 });
 const { URL } = require('url');
 
 /**
@@ -108,10 +112,12 @@ class LLMClient {
     return new Promise((resolve, reject) => {
       const url = new URL(this.cfg.baseUrl + path);
       const transport = url.protocol === 'https:' ? https : http;
+      const agent = url.protocol === 'https:' ? _httpsAgent : _httpAgent;
       const data = JSON.stringify(requestBody);
 
       const req = transport.request(url, {
         method: 'POST',
+        agent,
         headers: {
           'Authorization': `Bearer ${this.cfg.apiKey}`,
           'Content-Type': 'application/json',
@@ -271,10 +277,12 @@ class LLMClient {
     return new Promise((resolve, reject) => {
       const url = new URL(this.cfg.baseUrl + path);
       const transport = url.protocol === 'https:' ? https : http;
+      const agent = url.protocol === 'https:' ? _httpsAgent : _httpAgent;
       const data = JSON.stringify(body);
 
       const req = transport.request(url, {
         method: 'POST',
+        agent,
         headers: {
           'Authorization': `Bearer ${this.cfg.apiKey}`,
           'Content-Type': 'application/json',

@@ -65,6 +65,16 @@ function createSseCallback(res, writeFn) {
 }
 
 /**
+ * Apply CORS headers to a response object.
+ * Allows the debug UI to be accessed cross-origin.
+ */
+function applyCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+/**
  * Create an Express router with all debug agent endpoints.
  */
 function createExpressRouter(config) {
@@ -73,6 +83,16 @@ function createExpressRouter(config) {
   const cfg = new AgentConfig(config || {});
   const basePath = cfg.basePath;
   const engine = getEngine(cfg);
+
+  // CORS preflight
+  router.use(basePath, (req, res, next) => {
+    applyCorsHeaders(res);
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
 
   // Chat UI
   router.get(basePath, (req, res) => {
@@ -135,6 +155,16 @@ function createHttpHandler(config) {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const path = url.pathname;
     const base = cfg.basePath;
+
+    // CORS preflight for all agent routes
+    if (path.startsWith(base)) {
+      applyCorsHeaders(res);
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return true;
+      }
+    }
 
     // Chat UI
     if ((path === base || path === base + '/') && req.method === 'GET') {
@@ -242,4 +272,79 @@ function createFastifyPlugin(config) {
   };
 }
 
-module.exports = { createExpressRouter, createHttpHandler, createFastifyPlugin, getEngine };
+/**
+ * Koa middleware.
+ * Usage: app.use(createKoaMiddleware({ llm: { ... } }))
+ */
+function createKoaMiddleware(config) {
+  const cfg = new AgentConfig(config || {});
+  const engine = getEngine(cfg);
+
+  return async function (ctx, next) {
+    const path = ctx.path;
+    const base = cfg.basePath;
+
+    // CORS for all agent routes
+    if (path.startsWith(base)) {
+      ctx.set('Access-Control-Allow-Origin', '*');
+      ctx.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+      if (ctx.method === 'OPTIONS') {
+        ctx.status = 204;
+        return;
+      }
+    }
+
+    // Chat UI
+    if ((path === base || path === base + '/') && ctx.method === 'GET') {
+      ctx.type = 'html';
+      ctx.body = render(base);
+      return;
+    }
+
+    // SSE streaming chat
+    if (path === base + '/api/chat' && ctx.method === 'POST') {
+      const { message, sessionId } = ctx.request.body || {};
+      ctx.status = 200;
+      ctx.set('Content-Type', 'text/event-stream');
+      ctx.set('Cache-Control', 'no-cache');
+      ctx.set('Connection', 'keep-alive');
+
+      const sid = sessionId || ('session-' + Date.now());
+      const callback = createSseCallback(ctx.res);
+
+      try {
+        await engine.chat(message, sid, callback);
+      } catch (e) {
+        callback.onError('Internal error: ' + e.message);
+      }
+      ctx.res.end();
+      return;
+    }
+
+    // Clear conversation
+    if (path === base + '/api/clear' && ctx.method === 'POST') {
+      const { sessionId } = ctx.request.body || {};
+      if (sessionId) engine.clearSession(sessionId);
+      ctx.body = { status: 'cleared' };
+      return;
+    }
+
+    // Health check
+    if (path === base + '/api/health' && ctx.method === 'GET') {
+      ctx.body = { status: 'ok', agent: 'nodejs-debug-agent' };
+      return;
+    }
+
+    // List tools
+    if (path === base + '/api/tools' && ctx.method === 'GET') {
+      ctx.body = { tools: engine.tools.allSchemas() };
+      return;
+    }
+
+    await next();
+  };
+}
+
+module.exports = { createExpressRouter, createHttpHandler, createFastifyPlugin, createKoaMiddleware, getEngine };

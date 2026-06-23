@@ -169,6 +169,11 @@ debugTool('take_snapshot', 'Collect a comprehensive metrics snapshot across all 
       metrics,
     };
 
+    // Enforce max 100 snapshots to prevent unbounded growth
+    if (snapshots.size >= 100) {
+      const oldestKey = snapshots.keys().next().value;
+      snapshots.delete(oldestKey);
+    }
     snapshots.set(id, entry);
 
     // Build summary

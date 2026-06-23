@@ -61,6 +61,7 @@ debugTool('start_cpu_profile', 'Start V8 CPU profiling using the built-in inspec
         }
       }
     }, duration * 1000);
+    profileTimer.unref();
 
     // Don't keep the process alive for the timer
     if (profileTimer.unref) profileTimer.unref();

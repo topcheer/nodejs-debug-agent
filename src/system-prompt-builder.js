@@ -27,6 +27,7 @@ const CATEGORY_MAP = {
   // Modules
   module:         'Module Info',
   loaded:         'Module Info',
+  require:        'Module Info',
   // Framework
   routes:         'Framework',
   middleware:     'Framework',
@@ -37,8 +38,84 @@ const CATEGORY_MAP = {
   slow:           'HTTP Requests',
   error:          'HTTP Requests',
   request:        'HTTP Requests',
+  http:           'HTTP Requests',
   // Database
   db:             'Database',
+  sql:            'Database',
+  // Profiling
+  start:          'Profiling',
+  stop:           'Profiling',
+  top:            'Profiling',
+  // Memory & Snapshots
+  take:           'Memory & Snapshots',
+  compare:        'Memory & Snapshots',
+  list:           'Memory & Snapshots',
+  // Health & Security
+  health:         'Health Checks',
+  auth:           'Security',
+  cors:           'Security',
+  // Error Tracking
+  recent_errors:  'Error Tracking',
+  // Network
+  outbound:       'Network & HTTP',
+  ws:             'WebSocket',
+  // Cache
+  cache:          'Cache',
+  // Configuration
+  config:         'Configuration',
+  env:            'Configuration',
+  // Feature Flags
+  feature:        'Feature Flags',
+  evaluate:       'Feature Flags',
+  flag:           'Feature Flags',
+  // Endpoints
+  test:           'Endpoint Testing',
+  batch:          'Endpoint Testing',
+  endpoint:       'Endpoint Testing',
+  // Pool & Resources
+  pool:           'Connection Pool',
+  fd:             'File Descriptors',
+  handle:         'File Descriptors',
+  // Metrics
+  metric:         'Metrics',
+  counter:        'Metrics',
+  // Migration
+  migration:      'Database Migration',
+  pending:        'Database Migration',
+  // Build & Deployment
+  build:          'Build & Deployment',
+  deployment:     'Build & Deployment',
+  get_runtime:    'Build & Deployment',
+  // Services
+  registered:     'Service Registry',
+  service:        'Service Registry',
+  // Threads & Locks
+  thread:         'Threads & Locks',
+  lock:           'Threads & Locks',
+  async:          'Threads & Locks',
+  // Cluster
+  cluster:        'Cluster',
+  worker:         'Cluster',
+  // Logging
+  log:            'Logging',
+  // Redis
+  redis:          'Redis',
+  // Queue
+  bull:           'Job Queue',
+  queue:          'Job Queue',
+  job:            'Job Queue',
+  scheduled:      'Job Queue',
+  // Streams & Sockets
+  socket:         'Network & I/O',
+  stream:         'Network & I/O',
+  perf:           'Performance',
+  // Mongoose
+  mongoose:       'Database',
+  // Fastify
+  fastify:        'Framework',
+  plugins:        'Framework',
+  // Leak
+  leak:           'Memory & Snapshots',
 };
 
 class SystemPromptBuilder {
@@ -97,10 +174,26 @@ class SystemPromptBuilder {
   }
 
   _extractCategory(toolName) {
-    const match = toolName.match(/^([a-z]+)_/);
-    if (match) {
-      const prefix = match[1];
-      return CATEGORY_MAP[prefix] || 'Other Tools';
+    // Try progressively longer prefixes: get_heap → heap, get_recent_errors → recent_errors
+    const parts = toolName.split('_');
+
+    // Try 2-part prefix first (e.g., get_heap_stats → "heap" matches)
+    if (parts.length >= 3) {
+      const twoPart = parts[1] + '_' + parts[2];
+      if (CATEGORY_MAP[twoPart]) return CATEGORY_MAP[twoPart];
+    }
+    // Try second segment (e.g., get_heap_stats → "heap")
+    if (parts.length >= 2 && CATEGORY_MAP[parts[1]]) {
+      return CATEGORY_MAP[parts[1]];
+    }
+    // Try first segment (e.g., start_cpu_profile → "start")
+    if (CATEGORY_MAP[parts[0]]) {
+      return CATEGORY_MAP[parts[0]];
+    }
+    // Keyword fallback: search for any known keyword in the full name
+    const lower = toolName.toLowerCase();
+    for (const [key, cat] of Object.entries(CATEGORY_MAP)) {
+      if (lower.includes(key)) return cat;
     }
     return 'Other Tools';
   }

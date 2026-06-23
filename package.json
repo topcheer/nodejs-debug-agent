@@ -1,6 +1,6 @@
 {
   "name": "@ggaiteam/node-debug-agent",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "AI-powered runtime debugging agent for Node.js applications",
   "main": "src/index.js",
   "types": "src/index.d.ts",

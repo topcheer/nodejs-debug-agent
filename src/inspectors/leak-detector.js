@@ -136,6 +136,11 @@ debugTool('take_heap_snapshot', 'Record current V8 heap state: memory usage (rss
         typeStats: result.typeStats,
       };
 
+      // Enforce max 50 heap snapshots
+      if (heapSnapshots.size >= 50) {
+        const oldestKey = heapSnapshots.keys().next().value;
+        heapSnapshots.delete(oldestKey);
+      }
       heapSnapshots.set(id, entry);
 
       const mem = result.memUsage;

@@ -7,7 +7,7 @@ const { DebugEngine } = require('./engine');
 const { ChatSession } = require('./chat-session');
 const { SystemPromptBuilder } = require('./system-prompt-builder');
 const { ContextCompressor, CompressionResult } = require('./context-compressor');
-const { createExpressRouter, createFastifyPlugin, createHttpHandler } = require('./middleware');
+const { createExpressRouter, createFastifyPlugin, createHttpHandler, createKoaMiddleware } = require('./middleware');
 
 // Load built-in inspectors
 require('./inspectors');
@@ -27,4 +27,5 @@ module.exports = {
   createExpressRouter,
   createFastifyPlugin,
   createHttpHandler,
+  createKoaMiddleware,
 };
